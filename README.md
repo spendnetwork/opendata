@@ -1,2 +1,5 @@
 # opendata
-files we've released as open data.
+Sometimes we release specific files as open data, this repository is the source for that data. 
+
+2015-02-20
+Social Enterprise open data.
