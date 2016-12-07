@@ -2,6 +2,7 @@
 
 import csv
 import argparse
+from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 
 class buyer_parser:
@@ -23,25 +24,23 @@ class buyer_parser:
     return buyers
 
   # takes list of buyers, displays matches
-  # short: <= 8 chr -> 98
-  # long: > 8 chr -> 96
-
   def mash_list(self, buyers, short_threshold, long_threshold, short_size, stemming):
+    match_list = []
     for i, buyer in enumerate(buyers):
-      # excl_buyers is list of buyers excluding current check
-      excl_buyers = buyers[:i] + buyers[i+1 :]
-      # stem if stemming > 0
-      if(stemming > 0): excl_buyers = filter(lambda x: x.startswith(buyer[:stemming]), excl_buyers)
-#      sl = process.extractWithoutOrder(buyer, excl_buyers, scorer=fuzz.token_sort_ratio, score_cutoff=threshold)
-#      matches = sorted(sl, key=lambda i: i[1], reverse=True)
-#      if (len(matches) > 0): print(buyer + ": " + str(matches).strip('[]'))
-      threshold = long_threshold if len(buyer) > short_size else short_threshold
-      match = process.extractOne(buyer, excl_buyers)
+      if(buyer not in match_list):
+        match_list.append(buyer)
+        # excl_buyers is list of buyers excluding current check
+        excl_buyers = buyers[:i] + buyers[i+1 :]
+        # stem if stemming > 0
+        if(stemming > 0): excl_buyers = filter(lambda x: x.startswith(buyer[:stemming]), excl_buyers)
+        # threshold depends on length of buyer name
+        threshold = long_threshold if len(buyer) > short_size else short_threshold
 
-      try:
-        if(match[1] >= threshold): print("\t".join([buyer, match[0], str(match[1])]))
-      except:
-        pass
+        sl = process.extractWithoutOrder(buyer, excl_buyers, scorer=fuzz.token_sort_ratio, score_cutoff=threshold)
+        matches = sorted(sl, key=lambda i: i[1], reverse=True)
+        for match in matches:
+          match_list.append(match[0])
+          print('\t'.join([buyer, match[0], str(match[1])]))
 
 parser = argparse.ArgumentParser(description='Finds matches above a certain threshold in a tsv file')
 parser.add_argument('filename', metavar='file', help='tsv file to be processed')
